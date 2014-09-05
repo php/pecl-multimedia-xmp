@@ -1,18 +1,16 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 5                                                        |
+  | xmp                                                                  |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
-  +----------------------------------------------------------------------+
-  | This source file is subject to version 3.01 of the PHP license,      |
+  | This source file is subject to version 2.0 of the Apache license,    |
   | that is bundled with this package in the file LICENSE, and is        |
   | available through the world-wide-web at the following url:           |
-  | http://www.php.net/license/3_01.txt                                  |
-  | If you did not receive a copy of the PHP license and are unable to   |
-  | obtain it through the world-wide-web, please send a note to          |
+  | http://www.apache.org/licenses/LICENSE-2.0.html                      |
+  | If you did not receive a copy of the Apache2.0 license and are unable|
+  | to obtain it through the world-wide-web, please send a note to       |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Author: Boro Sitnikovski (buritomath@yahoo.com)                      |
+  | Author: Boro Sitnikovski <buritomath@yahoo.com>                      |
   +----------------------------------------------------------------------+
 */
 
@@ -23,113 +21,11 @@
 #endif
 
 #include "php.h"
-#include "php_ini.h"
 #include "ext/standard/info.h"
 #include "php_xmp.h"
 
-
-
 /* True global resources - no need for thread safety here */
 static int le_xmp;
-
-
-/* {{{ _free_xmp_context
- */
-static void _free_xmp_context(zend_rsrc_list_entry *rsrc TSRMLS_DC)
-{
-	xmp_context *xmp_ptr = (xmp_context *)rsrc->ptr;
-
-	if (*xmp_ptr) {
-		xmp_free_context(*xmp_ptr);
-		efree(xmp_ptr);
-	}
-
-}
-/* }}} */
-
-/* {{{ PHP_MINIT_FUNCTION
- */
-
-PHP_MINIT_FUNCTION(xmp)
-{
-	le_xmp = zend_register_list_destructors_ex(_free_xmp_context, NULL, "xmp context", module_number);
-	return SUCCESS;
-}
-/* }}} */
-
-/* {{{ PHP_MSHUTDOWN_FUNCTION
- */
-PHP_MSHUTDOWN_FUNCTION(xmp)
-{
-	return SUCCESS;
-}
-/* }}} */
-
-/* {{{ PHP_MINFO_FUNCTION
- */
-PHP_MINFO_FUNCTION(xmp)
-{
-	php_info_print_table_start();
-	php_info_print_table_header(2, "xmp support", "enabled");
-	php_info_print_table_end();
-}
-/* }}} */
-
-/* {{{ xmp_functions[]
- *
- * Every user visible function must have an entry in xmp_functions[].
- */
-const zend_function_entry xmp_functions[] = {
-	PHP_FE(xmp_get_format_list, NULL)
-	PHP_FE(xmp_create_context, NULL)
-	PHP_FE(xmp_free_context, NULL)
-	PHP_FE(xmp_test_module, NULL)
-	PHP_FE(xmp_load_module, NULL)
-	PHP_FE(xmp_load_module_from_memory, NULL)
-	PHP_FE(xmp_release_module, NULL)
-	PHP_FE(xmp_get_module_info, NULL)
-	PHP_FE(xmp_start_player, NULL)
-	PHP_FE(xmp_play_frame, NULL)
-	PHP_FE(xmp_get_frame_info, NULL)
-	PHP_FE(xmp_end_player, NULL)
-	PHP_FE(xmp_next_position, NULL)
-	PHP_FE(xmp_prev_position, NULL)
-	PHP_FE(xmp_set_position, NULL)
-	PHP_FE(xmp_stop_module, NULL)
-	PHP_FE(xmp_restart_module, NULL)
-	PHP_FE(xmp_seek_time, NULL)
-	PHP_FE(xmp_channel_mute, NULL)
-	PHP_FE(xmp_channel_vol, NULL)
-	PHP_FE(xmp_inject_event, NULL)
-	PHP_FE(xmp_set_instrument_path, NULL)
-	PHP_FE(xmp_get_player, NULL)
-	PHP_FE(xmp_set_player, NULL)
-	PHP_FE(xmp_start_smix, NULL)
-	PHP_FE(xmp_smix_play_instrument, NULL)
-	PHP_FE(xmp_smix_play_sample, NULL)
-	PHP_FE(xmp_smix_channel_pan, NULL)
-	PHP_FE(xmp_smix_load_sample, NULL)
-	PHP_FE(xmp_smix_release_sample, NULL)
-	PHP_FE(xmp_end_smix, NULL)
-	PHP_FE_END	/* Must be the last line in xmp_functions[] */
-};
-/* }}} */
-
-/* {{{ xmp_module_entry
- */
-zend_module_entry xmp_module_entry = {
-	STANDARD_MODULE_HEADER,
-	"xmp",
-	xmp_functions,
-	PHP_MINIT(xmp),
-	PHP_MSHUTDOWN(xmp),
-	NULL,
-	NULL,
-	PHP_MINFO(xmp),
-	PHP_XMP_VERSION,
-	STANDARD_MODULE_PROPERTIES
-};
-/* }}} */
 
 #ifdef COMPILE_DL_XMP
 ZEND_GET_MODULE(xmp)
@@ -141,6 +37,10 @@ PHP_FUNCTION(xmp_get_format_list)
 {
 	char **formats;
 	int i = 0;
+
+	if (zend_parse_parameters_none() == FAILURE) {
+		return;
+	}
 
 	formats = xmp_get_format_list();
 
@@ -159,6 +59,10 @@ PHP_FUNCTION(xmp_create_context)
 {
 	xmp_context *xmp_ptr = emalloc(sizeof(xmp_context));
 	xmp_context xmp;
+
+	if (zend_parse_parameters_none() == FAILURE) {
+		return;
+	}
 
 	xmp = xmp_create_context();
 	memcpy(xmp_ptr, &xmp, sizeof(xmp_context));
@@ -197,7 +101,7 @@ PHP_FUNCTION(xmp_test_module)
 {
 	long ret;
 	char *path;
-	size_t path_len;
+	int path_len;
 	struct xmp_test_info ti;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE) {
@@ -209,8 +113,8 @@ PHP_FUNCTION(xmp_test_module)
 		RETVAL_LONG(ret);
 	} else {
 		array_init(return_value);
-		add_assoc_string(return_value, "name", ti.name, 1);
-		add_assoc_string(return_value, "type", ti.type, 1);
+		add_assoc_string_ex(return_value, "name", sizeof("name")-1, ti.name, 1);
+		add_assoc_string_ex(return_value, "type", sizeof("type")-1, ti.type, 1);
 	}
 }
 /* }}} */
@@ -223,7 +127,7 @@ PHP_FUNCTION(xmp_load_module)
 	zval *ctx;
 	int ret;
 	char *path;
-	size_t path_len;
+	int path_len;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &ctx, &path, &path_len) == FAILURE) {
 		return;
@@ -292,24 +196,24 @@ PHP_FUNCTION(xmp_get_module_info)
 	xmp_get_module_info(*xmp_ptr, &mi);
 
 	array_init(return_value);
-	add_assoc_stringl(return_value, "md5", (char *)mi.md5, 16, 1);
-	add_assoc_long(return_value, "vol_base", mi.vol_base);
+	add_assoc_stringl_ex(return_value, "md5", sizeof("md5")-1, (char *)mi.md5, 16, 1);
+	add_assoc_long_ex(return_value, "vol_base", sizeof("vol_base")-1, mi.vol_base);
 
 	MAKE_STD_ZVAL(mod);
 	array_init(mod);
 	{
-		add_assoc_string(mod, "name", mi.mod->name, 1);
-		add_assoc_string(mod, "type", mi.mod->type, 1);
-		add_assoc_long(mod, "pat", mi.mod->pat);
-		add_assoc_long(mod, "trk", mi.mod->trk);
-		add_assoc_long(mod, "chn", mi.mod->chn);
-		add_assoc_long(mod, "ins", mi.mod->ins);
-		add_assoc_long(mod, "smp", mi.mod->smp);
-		add_assoc_long(mod, "spd", mi.mod->spd);
-		add_assoc_long(mod, "bpm", mi.mod->bpm);
-		add_assoc_long(mod, "len", mi.mod->len);
-		add_assoc_long(mod, "rst", mi.mod->rst);
-		add_assoc_long(mod, "gvl", mi.mod->gvl);
+		add_assoc_string_ex(mod, "name", sizeof("name")-1, mi.mod->name, 1);
+		add_assoc_string_ex(mod, "type", sizeof("type")-1, mi.mod->type, 1);
+		add_assoc_long_ex(mod, "pat", sizeof("pat")-1, mi.mod->pat);
+		add_assoc_long_ex(mod, "trk", sizeof("trk")-1, mi.mod->trk);
+		add_assoc_long_ex(mod, "chn", sizeof("chn")-1, mi.mod->chn);
+		add_assoc_long_ex(mod, "ins", sizeof("ins")-1, mi.mod->ins);
+		add_assoc_long_ex(mod, "smp", sizeof("smp")-1, mi.mod->smp);
+		add_assoc_long_ex(mod, "spd", sizeof("spd")-1, mi.mod->spd);
+		add_assoc_long_ex(mod, "bpm", sizeof("bpm")-1, mi.mod->bpm);
+		add_assoc_long_ex(mod, "len", sizeof("len")-1, mi.mod->len);
+		add_assoc_long_ex(mod, "rst", sizeof("rst")-1, mi.mod->rst);
+		add_assoc_long_ex(mod, "gvl", sizeof("gvl")-1, mi.mod->gvl);
 
 		MAKE_STD_ZVAL(xxp);
 		array_init(xxp);
@@ -318,11 +222,11 @@ PHP_FUNCTION(xmp_get_module_info)
 				MAKE_STD_ZVAL(cur);
 				array_init(cur);
 				xp = mi.mod->xxp[i];
-				add_assoc_long(cur, "rows", xp->rows);
-				add_assoc_long(cur, "index", xp->index[0]);
+				add_assoc_long_ex(cur, "rows", sizeof("rows")-1, xp->rows);
+				add_assoc_long_ex(cur, "index", sizeof("index")-1, xp->index[0]);
 				add_next_index_zval(xxp, cur);
 			}
-			add_assoc_zval(mod, "xxp", xxp);
+			add_assoc_zval_ex(mod, "xxp", sizeof("xxp")-1, xxp);
 		}
 
 		MAKE_STD_ZVAL(xxt);
@@ -332,23 +236,23 @@ PHP_FUNCTION(xmp_get_module_info)
 				MAKE_STD_ZVAL(cur);
 				array_init(cur);
 				xt = mi.mod->xxt[i];
-				add_assoc_long(cur, "rows", xt->rows);
+				add_assoc_long_ex(cur, "rows", sizeof("rows")-1, xt->rows);
 				MAKE_STD_ZVAL(event);
 				array_init(event);
 				{
-					add_assoc_long(event, "note", xt->event[0].note);
-					add_assoc_long(event, "ins", xt->event[0].ins);
-					add_assoc_long(event, "vol", xt->event[0].vol);
-					add_assoc_long(event, "fxt", xt->event[0].fxt);
-					add_assoc_long(event, "fxp", xt->event[0].fxp);
-					add_assoc_long(event, "f2t", xt->event[0].f2t);
-					add_assoc_long(event, "f2p", xt->event[0].f2p);
-					add_assoc_long(event, "_flag", xt->event[0]._flag);
+					add_assoc_long_ex(event, "note", sizeof("note")-1, xt->event[0].note);
+					add_assoc_long_ex(event, "ins", sizeof("ins")-1, xt->event[0].ins);
+					add_assoc_long_ex(event, "vol", sizeof("vol")-1, xt->event[0].vol);
+					add_assoc_long_ex(event, "fxt", sizeof("fxt")-1, xt->event[0].fxt);
+					add_assoc_long_ex(event, "fxp", sizeof("fxp")-1, xt->event[0].fxp);
+					add_assoc_long_ex(event, "f2t", sizeof("f2t")-1, xt->event[0].f2t);
+					add_assoc_long_ex(event, "f2p", sizeof("f2p")-1, xt->event[0].f2p);
+					add_assoc_long_ex(event, "_flag", sizeof("_flag")-1, xt->event[0]._flag);
 				}
 				add_next_index_zval(cur, event);
 				add_next_index_zval(xxt, cur);
 			}
-			add_assoc_zval(mod, "xxt", xxt);
+			add_assoc_zval_ex(mod, "xxt", sizeof("xxt")-1, xxt);
 		}
 
 		MAKE_STD_ZVAL(xxi);
@@ -358,48 +262,48 @@ PHP_FUNCTION(xmp_get_module_info)
 				xi = &mi.mod->xxi[i];
 				MAKE_STD_ZVAL(cur);
 				array_init(cur);
-				add_assoc_string(cur, "name", xi->name, 1);
-				add_assoc_long(cur, "vol", xi->vol);
-				add_assoc_long(cur, "nsm", xi->nsm);
-				add_assoc_long(cur, "rls", xi->rls);
+				add_assoc_string_ex(cur, "name", sizeof("name")-1, xi->name, 1);
+				add_assoc_long_ex(cur, "vol", sizeof("vol")-1, xi->vol);
+				add_assoc_long_ex(cur, "nsm", sizeof("nsm")-1, xi->nsm);
+				add_assoc_long_ex(cur, "rls", sizeof("rls")-1, xi->rls);
 				MAKE_STD_ZVAL(curr);
 				array_init(curr);
 				{
-					add_assoc_long(curr, "flg", xi->aei.flg);
-					add_assoc_long(curr, "npt", xi->aei.npt);
-					add_assoc_long(curr, "scl", xi->aei.scl);
-					add_assoc_long(curr, "sus", xi->aei.sus);
-					add_assoc_long(curr, "sue", xi->aei.sue);
-					add_assoc_long(curr, "lps", xi->aei.lps);
-					add_assoc_long(curr, "lpe", xi->aei.lpe);
-					add_assoc_stringl(curr, "data", (char *)xi->aei.data, XMP_MAX_ENV_POINTS * 2, 1);
-					add_assoc_zval(cur, "aei", curr);
+					add_assoc_long_ex(curr, "flg", sizeof("flg")-1, xi->aei.flg);
+					add_assoc_long_ex(curr, "npt", sizeof("npt")-1, xi->aei.npt);
+					add_assoc_long_ex(curr, "scl", sizeof("scl")-1, xi->aei.scl);
+					add_assoc_long_ex(curr, "sus", sizeof("sus")-1, xi->aei.sus);
+					add_assoc_long_ex(curr, "sue", sizeof("sue")-1, xi->aei.sue);
+					add_assoc_long_ex(curr, "lps", sizeof("lps")-1, xi->aei.lps);
+					add_assoc_long_ex(curr, "lpe", sizeof("lpe")-1, xi->aei.lpe);
+					add_assoc_stringl_ex(curr, "data", sizeof("data")-1, (char *)xi->aei.data, XMP_MAX_ENV_POINTS * 2, 1);
+					add_assoc_zval_ex(cur, "aei", sizeof("aei")-1, curr);
 				}
 				MAKE_STD_ZVAL(curr);
 				array_init(curr);
 				{
-					add_assoc_long(curr, "flg", xi->pei.flg);
-					add_assoc_long(curr, "npt", xi->pei.npt);
-					add_assoc_long(curr, "scl", xi->pei.scl);
-					add_assoc_long(curr, "sus", xi->pei.sus);
-					add_assoc_long(curr, "sue", xi->pei.sue);
-					add_assoc_long(curr, "lps", xi->pei.lps);
-					add_assoc_long(curr, "lpe", xi->pei.lpe);
-					add_assoc_stringl(curr, "data", (char *)xi->pei.data, XMP_MAX_ENV_POINTS * 2, 1);
-					add_assoc_zval(cur, "pei", curr);
+					add_assoc_long_ex(curr, "flg", sizeof("flg")-1, xi->pei.flg);
+					add_assoc_long_ex(curr, "npt", sizeof("npt")-1, xi->pei.npt);
+					add_assoc_long_ex(curr, "scl", sizeof("scl")-1, xi->pei.scl);
+					add_assoc_long_ex(curr, "sus", sizeof("sus")-1, xi->pei.sus);
+					add_assoc_long_ex(curr, "sue", sizeof("sue")-1, xi->pei.sue);
+					add_assoc_long_ex(curr, "lps", sizeof("lps")-1, xi->pei.lps);
+					add_assoc_long_ex(curr, "lpe", sizeof("lpe")-1, xi->pei.lpe);
+					add_assoc_stringl_ex(curr, "data", sizeof("data")-1, (char *)xi->pei.data, XMP_MAX_ENV_POINTS * 2, 1);
+					add_assoc_zval_ex(cur, "pei", sizeof("pei")-1, curr);
 				}
 				MAKE_STD_ZVAL(curr);
 				array_init(curr);
 				{
-					add_assoc_long(curr, "flg", xi->fei.flg);
-					add_assoc_long(curr, "npt", xi->fei.npt);
-					add_assoc_long(curr, "scl", xi->fei.scl);
-					add_assoc_long(curr, "sus", xi->fei.sus);
-					add_assoc_long(curr, "sue", xi->fei.sue);
-					add_assoc_long(curr, "lps", xi->fei.lps);
-					add_assoc_long(curr, "lpe", xi->fei.lpe);
-					add_assoc_stringl(curr, "data", (char *)xi->fei.data, XMP_MAX_ENV_POINTS * 2, 1);
-					add_assoc_zval(cur, "fei", curr);
+					add_assoc_long_ex(curr, "flg", sizeof("flg")-1, xi->fei.flg);
+					add_assoc_long_ex(curr, "npt", sizeof("npt")-1, xi->fei.npt);
+					add_assoc_long_ex(curr, "scl", sizeof("scl")-1, xi->fei.scl);
+					add_assoc_long_ex(curr, "sus", sizeof("sus")-1, xi->fei.sus);
+					add_assoc_long_ex(curr, "sue", sizeof("sue")-1, xi->fei.sue);
+					add_assoc_long_ex(curr, "lps", sizeof("lps")-1, xi->fei.lps);
+					add_assoc_long_ex(curr, "lpe", sizeof("lpe")-1, xi->fei.lpe);
+					add_assoc_stringl_ex(curr, "data", sizeof("data")-1, (char *)xi->fei.data, XMP_MAX_ENV_POINTS * 2, 1);
+					add_assoc_zval_ex(cur, "fei", sizeof("fei")-1, curr);
 				}
 				MAKE_STD_ZVAL(curr);
 				array_init(curr);
@@ -407,53 +311,53 @@ PHP_FUNCTION(xmp_get_module_info)
 					for (i=0;i<XMP_MAX_KEYS;i++) {
 						MAKE_STD_ZVAL(currr);
 						array_init(currr);
-						add_assoc_long(currr, "ins", xi->map[i].ins);
-						add_assoc_long(currr, "xpo", xi->map[i].xpo);
+						add_assoc_long_ex(currr, "ins", sizeof("ins")-1, xi->map[i].ins);
+						add_assoc_long_ex(currr, "xpo", sizeof("xpc")-1, xi->map[i].xpo);
 						add_next_index_zval(curr, currr);
 					}
-					add_assoc_zval(cur, "map", curr);
+					add_assoc_zval_ex(cur, "map", sizeof("map")-1, curr);
 				}
 				MAKE_STD_ZVAL(curr);
 				array_init(curr);
 				{
-					add_assoc_long(curr, "vol", xi->sub->vol);
-					add_assoc_long(curr, "gvl", xi->sub->gvl);
-					add_assoc_long(curr, "pan", xi->sub->pan);
-					add_assoc_long(curr, "xpo", xi->sub->xpo);
-					add_assoc_long(curr, "fin", xi->sub->fin);
-					add_assoc_long(curr, "vwf", xi->sub->vwf);
-					add_assoc_long(curr, "vde", xi->sub->vde);
-					add_assoc_long(curr, "vra", xi->sub->vra);
-					add_assoc_long(curr, "vsw", xi->sub->vsw);
-					add_assoc_long(curr, "rvv", xi->sub->rvv);
-					add_assoc_long(curr, "sid", xi->sub->sid);
-					add_assoc_long(curr, "nna", xi->sub->nna);
-					add_assoc_long(curr, "dct", xi->sub->dct);
-					add_assoc_long(curr, "dca", xi->sub->dca);
-					add_assoc_long(curr, "ifc", xi->sub->ifc);
-					add_assoc_long(curr, "ifr", xi->sub->ifr);
-					add_assoc_zval(cur, "sub", curr);
+					add_assoc_long_ex(curr, "vol", sizeof("vol")-1, xi->sub->vol);
+					add_assoc_long_ex(curr, "gvl", sizeof("gvl")-1, xi->sub->gvl);
+					add_assoc_long_ex(curr, "pan", sizeof("pan")-1, xi->sub->pan);
+					add_assoc_long_ex(curr, "xpo", sizeof("xpo")-1, xi->sub->xpo);
+					add_assoc_long_ex(curr, "fin", sizeof("fin")-1, xi->sub->fin);
+					add_assoc_long_ex(curr, "vwf", sizeof("vwf")-1, xi->sub->vwf);
+					add_assoc_long_ex(curr, "vde", sizeof("vde")-1, xi->sub->vde);
+					add_assoc_long_ex(curr, "vra", sizeof("vra")-1, xi->sub->vra);
+					add_assoc_long_ex(curr, "vsw", sizeof("vsw")-1, xi->sub->vsw);
+					add_assoc_long_ex(curr, "rvv", sizeof("rvv")-1, xi->sub->rvv);
+					add_assoc_long_ex(curr, "sid", sizeof("sid")-1, xi->sub->sid);
+					add_assoc_long_ex(curr, "nna", sizeof("nna")-1, xi->sub->nna);
+					add_assoc_long_ex(curr, "dct", sizeof("dct")-1, xi->sub->dct);
+					add_assoc_long_ex(curr, "dca", sizeof("dca")-1, xi->sub->dca);
+					add_assoc_long_ex(curr, "ifc", sizeof("ifc")-1, xi->sub->ifc);
+					add_assoc_long_ex(curr, "ifr", sizeof("ifr")-1, xi->sub->ifr);
+					add_assoc_zval_ex(cur, "sub", sizeof("sub")-1, curr);
 				}
 				add_next_index_zval(xxi, cur);
 			}
-			add_assoc_zval(mod, "xxi", xxi);
+			add_assoc_zval_ex(mod, "xxi", sizeof("xxi")-1, xxi);
 		}
 
 		MAKE_STD_ZVAL(xxs);
 		array_init(xxs);
 		{
 			xs = mi.mod->xxs;
-			add_assoc_string(xxs, "name", xs->name, 1);
-			add_assoc_long(xxs, "len", xs->len);
-			add_assoc_long(xxs, "lps", xs->lps);
-			add_assoc_long(xxs, "lpe", xs->lpe);
-			add_assoc_long(xxs, "flg", xs->flg);
+			add_assoc_string_ex(xxs, "name", sizeof("name")-1, xs->name, 1);
+			add_assoc_long_ex(xxs, "len", sizeof("len")-1, xs->len);
+			add_assoc_long_ex(xxs, "lps", sizeof("lps")-1, xs->lps);
+			add_assoc_long_ex(xxs, "lpe", sizeof("lpe")-1, xs->lpe);
+			add_assoc_long_ex(xxs, "flg", sizeof("flg")-1, xs->flg);
 			if (xs->data) {
-				add_assoc_stringl(xxs, "data", (char *)xs->data, xs->len, 1);
+				add_assoc_stringl_ex(xxs, "data", sizeof("data")-1, (char *)xs->data, xs->len, 1);
 			} else {
-				add_assoc_string(xxs, "data", "", 1);
+				add_assoc_string_ex(xxs, "data", sizeof("data")-1, "", 1);
 			}
-			add_assoc_zval(mod, "xxs", xxs);
+			add_assoc_zval_ex(mod, "xxs", sizeof("xxs")-1, xxs);
 		}
 
 		MAKE_STD_ZVAL(xxc);
@@ -463,31 +367,31 @@ PHP_FUNCTION(xmp_get_module_info)
 				xc = &mi.mod->xxc[i];
 				MAKE_STD_ZVAL(cur);
 				array_init(cur);
-				add_assoc_long(cur, "pan", xc->pan);
-				add_assoc_long(cur, "vol", xc->vol);
-				add_assoc_long(cur, "flg", xc->flg);
+				add_assoc_long_ex(cur, "pan", sizeof("pan")-1, xc->pan);
+				add_assoc_long_ex(cur, "vol", sizeof("vol")-1, xc->vol);
+				add_assoc_long_ex(cur, "flg", sizeof("flg")-1, xc->flg);
 				add_next_index_zval(xxc, cur);
 			}
-			add_assoc_zval(mod, "xxc", xxc);
+			add_assoc_zval_ex(mod, "xxc", sizeof("xxc")-1, xxc);
 		}
 
-		add_assoc_string(mod, "xxo", (char *)mi.mod->xxo, 1);
-		add_assoc_zval(return_value, "mod", mod);
+		add_assoc_string_ex(mod, "xxo", sizeof("xxo")-1, (char *)mi.mod->xxo, 1);
+		add_assoc_zval_ex(return_value, "mod", sizeof("mod")-1, mod);
 	}
 
 	if (mi.comment) {
-		add_assoc_string(return_value, "comment", mi.comment, 1);
+		add_assoc_string_ex(return_value, "comment", sizeof("comment")-1, mi.comment, 1);
 	} else {
-		add_assoc_string(return_value, "comment", "", 1);
+		add_assoc_string_ex(return_value, "comment", sizeof("comment")-1, "", 1);
 	}
-	add_assoc_long(return_value, "num_sequences", mi.num_sequences);
+	add_assoc_long_ex(return_value, "num_sequences", sizeof("num_sequences")-1, mi.num_sequences);
 
 	MAKE_STD_ZVAL(seq_data);
 	array_init(seq_data);
 	{
-		add_assoc_long(seq_data, "entry_point", mi.seq_data->entry_point);
-		add_assoc_long(seq_data, "duration", mi.seq_data->duration);
-		add_assoc_zval(return_value, "seq_data", seq_data);
+		add_assoc_long_ex(seq_data, "entry_point", sizeof("entry_point")-1, mi.seq_data->entry_point);
+		add_assoc_long_ex(seq_data, "duration", sizeof("duration")-1, mi.seq_data->duration);
+		add_assoc_zval_ex(return_value, "seq_data", sizeof("seq_data")-1, seq_data);
 	}
 }
 /* }}} */
@@ -548,25 +452,25 @@ PHP_FUNCTION(xmp_get_frame_info)
 	xmp_get_frame_info(*xmp_ptr, &fi);
 
 	array_init(return_value);
-	add_assoc_long(return_value, "pos", fi.pos);
-	add_assoc_long(return_value, "pattern", fi.pattern);
-	add_assoc_long(return_value, "row", fi.row);
-	add_assoc_long(return_value, "num_rows", fi.num_rows);
-	add_assoc_long(return_value, "frame", fi.frame);
-	add_assoc_long(return_value, "speed", fi.speed);
-	add_assoc_long(return_value, "bpm", fi.bpm);
-	add_assoc_long(return_value, "time", fi.time);
-	add_assoc_long(return_value, "total_time", fi.total_time);
-	add_assoc_long(return_value, "frame_time", fi.frame_time);
-	add_assoc_stringl(return_value, "buffer", (char *)fi.buffer, fi.buffer_size, 1);
-	add_assoc_long(return_value, "buffer_size", fi.buffer_size);
-	add_assoc_long(return_value, "total_size", fi.total_size);
-	add_assoc_long(return_value, "volume", fi.volume);
-	add_assoc_long(return_value, "loop_count", fi.loop_count);
-	add_assoc_long(return_value, "virt_channels", fi.virt_channels);
-	add_assoc_long(return_value, "virt_used", fi.virt_used);
-	add_assoc_long(return_value, "sequence", fi.sequence);
-	add_assoc_long(return_value, "pattern", fi.pattern);
+	add_assoc_long_ex(return_value, "pos", sizeof("pos")-1, fi.pos);
+	add_assoc_long_ex(return_value, "pattern", sizeof("pattern")-1, fi.pattern);
+	add_assoc_long_ex(return_value, "row", sizeof("row")-1, fi.row);
+	add_assoc_long_ex(return_value, "num_rows", sizeof("num_rows")-1, fi.num_rows);
+	add_assoc_long_ex(return_value, "frame", sizeof("frame")-1, fi.frame);
+	add_assoc_long_ex(return_value, "speed", sizeof("speed")-1, fi.speed);
+	add_assoc_long_ex(return_value, "bpm", sizeof("bpm")-1, fi.bpm);
+	add_assoc_long_ex(return_value, "time", sizeof("time")-1, fi.time);
+	add_assoc_long_ex(return_value, "total_time", sizeof("total_time")-1, fi.total_time);
+	add_assoc_long_ex(return_value, "frame_time", sizeof("frame_time")-1, fi.frame_time);
+	add_assoc_stringl_ex(return_value, "buffer", sizeof("buffer")-1, (char *)fi.buffer, fi.buffer_size, 1);
+	add_assoc_long_ex(return_value, "buffer_size", sizeof("buffer_size")-1, fi.buffer_size);
+	add_assoc_long_ex(return_value, "total_size", sizeof("total_size")-1, fi.total_size);
+	add_assoc_long_ex(return_value, "volume", sizeof("volume")-1, fi.volume);
+	add_assoc_long_ex(return_value, "loop_count", sizeof("loop_count")-1, fi.loop_count);
+	add_assoc_long_ex(return_value, "virt_channels", sizeof("virt_channels")-1, fi.virt_channels);
+	add_assoc_long_ex(return_value, "virt_used", sizeof("virt_used")-1, fi.virt_used);
+	add_assoc_long_ex(return_value, "sequence", sizeof("sequence")-1, fi.sequence);
+	add_assoc_long_ex(return_value, "pattern", sizeof("pattern")-1, fi.pattern);
 
 	MAKE_STD_ZVAL(channel_info);
 	array_init(channel_info);
@@ -576,34 +480,34 @@ PHP_FUNCTION(xmp_get_frame_info)
 			MAKE_STD_ZVAL(cur);
 			array_init(cur);
 			{
-				add_assoc_long(cur, "period", ci->period);
-				add_assoc_long(cur, "position", ci->position);
-				add_assoc_long(cur, "pitchbend", ci->pitchbend);
-				add_assoc_long(cur, "note", ci->note);
-				add_assoc_long(cur, "instrument", ci->instrument);
-				add_assoc_long(cur, "sample", ci->sample);
-				add_assoc_long(cur, "volume", ci->volume);
-				add_assoc_long(cur, "pan", ci->pan);
-				add_assoc_long(cur, "reserved", ci->reserved);
+				add_assoc_long_ex(cur, "period", sizeof("period")-1, ci->period);
+				add_assoc_long_ex(cur, "position", sizeof("position")-1, ci->position);
+				add_assoc_long_ex(cur, "pitchbend", sizeof("pitchbend")-1, ci->pitchbend);
+				add_assoc_long_ex(cur, "note", sizeof("note")-1, ci->note);
+				add_assoc_long_ex(cur, "instrument", sizeof("instrument")-1, ci->instrument);
+				add_assoc_long_ex(cur, "sample", sizeof("sample")-1, ci->sample);
+				add_assoc_long_ex(cur, "volume", sizeof("volume")-1, ci->volume);
+				add_assoc_long_ex(cur, "pan", sizeof("pan")-1, ci->pan);
+				add_assoc_long_ex(cur, "reserved", sizeof("reserved")-1, ci->reserved);
 				{
 					MAKE_STD_ZVAL(event);
 					array_init(event);
 					{
-						add_assoc_long(cur, "note", ci->event.note);
-						add_assoc_long(cur, "ins", ci->event.ins);
-						add_assoc_long(cur, "vol", ci->event.vol);
-						add_assoc_long(cur, "fxt", ci->event.fxt);
-						add_assoc_long(cur, "fxp", ci->event.fxp);
-						add_assoc_long(cur, "f2t", ci->event.f2t);
-						add_assoc_long(cur, "f2p", ci->event.f2p);
-						add_assoc_long(cur, "_flag", ci->event._flag);
+						add_assoc_long_ex(cur, "note", sizeof("note")-1, ci->event.note);
+						add_assoc_long_ex(cur, "ins", sizeof("ins")-1, ci->event.ins);
+						add_assoc_long_ex(cur, "vol", sizeof("vol")-1, ci->event.vol);
+						add_assoc_long_ex(cur, "fxt", sizeof("fxt")-1, ci->event.fxt);
+						add_assoc_long_ex(cur, "fxp", sizeof("fxp")-1, ci->event.fxp);
+						add_assoc_long_ex(cur, "f2t", sizeof("f2t")-1, ci->event.f2t);
+						add_assoc_long_ex(cur, "f2p", sizeof("f2p")-1, ci->event.f2p);
+						add_assoc_long_ex(cur, "_flag", sizeof("_flag")-1, ci->event._flag);
 					}
-					add_assoc_zval(cur, "event", event);
+					add_assoc_zval_ex(cur, "event", sizeof("event")-1, event);
 				}
 				add_next_index_zval(channel_info, cur);
 			}
 		}
-		add_assoc_zval(return_value, "channel_info", channel_info);
+		add_assoc_zval_ex(return_value, "channel_info", sizeof("channel_info")-1, channel_info);
 	}
 }
 /* }}} */
@@ -986,6 +890,104 @@ PHP_FUNCTION(xmp_end_smix)
 /* }}} */
 
 
+
+/* {{{ _free_xmp_context
+ */
+static void _free_xmp_context(zend_rsrc_list_entry *rsrc TSRMLS_DC)
+{
+	xmp_context *xmp_ptr = (xmp_context *)rsrc->ptr;
+
+	if (*xmp_ptr) {
+		xmp_free_context(*xmp_ptr);
+		efree(xmp_ptr);
+	}
+
+}
+/* }}} */
+
+/* {{{ PHP_MINIT_FUNCTION
+ */
+
+PHP_MINIT_FUNCTION(xmp)
+{
+	le_xmp = zend_register_list_destructors_ex(_free_xmp_context, NULL, "xmp context", module_number);
+	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ PHP_MSHUTDOWN_FUNCTION
+ */
+PHP_MSHUTDOWN_FUNCTION(xmp)
+{
+	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ PHP_MINFO_FUNCTION
+ */
+PHP_MINFO_FUNCTION(xmp)
+{
+	php_info_print_table_start();
+	php_info_print_table_header(2, "xmp support", "enabled");
+	php_info_print_table_end();
+}
+/* }}} */
+
+/* {{{ xmp_functions[]
+ *
+ * Every user visible function must have an entry in xmp_functions[].
+ */
+const zend_function_entry xmp_functions[] = {
+	PHP_FE(xmp_get_format_list, NULL)
+	PHP_FE(xmp_create_context, NULL)
+	PHP_FE(xmp_free_context, NULL)
+	PHP_FE(xmp_test_module, NULL)
+	PHP_FE(xmp_load_module, NULL)
+	PHP_FE(xmp_load_module_from_memory, NULL)
+	PHP_FE(xmp_release_module, NULL)
+	PHP_FE(xmp_get_module_info, NULL)
+	PHP_FE(xmp_start_player, NULL)
+	PHP_FE(xmp_play_frame, NULL)
+	PHP_FE(xmp_get_frame_info, NULL)
+	PHP_FE(xmp_end_player, NULL)
+	PHP_FE(xmp_next_position, NULL)
+	PHP_FE(xmp_prev_position, NULL)
+	PHP_FE(xmp_set_position, NULL)
+	PHP_FE(xmp_stop_module, NULL)
+	PHP_FE(xmp_restart_module, NULL)
+	PHP_FE(xmp_seek_time, NULL)
+	PHP_FE(xmp_channel_mute, NULL)
+	PHP_FE(xmp_channel_vol, NULL)
+	PHP_FE(xmp_inject_event, NULL)
+	PHP_FE(xmp_set_instrument_path, NULL)
+	PHP_FE(xmp_get_player, NULL)
+	PHP_FE(xmp_set_player, NULL)
+	PHP_FE(xmp_start_smix, NULL)
+	PHP_FE(xmp_smix_play_instrument, NULL)
+	PHP_FE(xmp_smix_play_sample, NULL)
+	PHP_FE(xmp_smix_channel_pan, NULL)
+	PHP_FE(xmp_smix_load_sample, NULL)
+	PHP_FE(xmp_smix_release_sample, NULL)
+	PHP_FE(xmp_end_smix, NULL)
+	PHP_FE_END	/* Must be the last line in xmp_functions[] */
+};
+/* }}} */
+
+/* {{{ xmp_module_entry
+ */
+zend_module_entry xmp_module_entry = {
+	STANDARD_MODULE_HEADER,
+	"xmp",
+	xmp_functions,
+	PHP_MINIT(xmp),
+	PHP_MSHUTDOWN(xmp),
+	NULL,
+	NULL,
+	PHP_MINFO(xmp),
+	PHP_XMP_VERSION,
+	STANDARD_MODULE_PROPERTIES
+};
+/* }}} */
 
 /*
  * Local variables:
