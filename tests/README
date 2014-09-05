@@ -1,0 +1,7 @@
+`001_main/` contains base tests
+`002_context/` contains tests for context creation/deletion
+`003_loading/` contains tests for module loading
+`004_playing/` contains tests for module playing
+`005_control/` contains tests for player control
+`006_settings/` contains tests for player parameter settings
+`007_mixing/` contains tests for the mix subsystem

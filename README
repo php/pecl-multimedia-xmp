@@ -1,0 +1,14 @@
+======================
+xmp PECL Extension 4.2
+======================
+
+This PECL extension allows you to control module files (play, retrieve metadata, dump data, etc).
+
+To compile it, you will need to have the libxmp c library (version 4.2) installed.
+
+libxmp API reference manual can be found at http://xmp.sourceforge.net/libxmp.html
+
+Compile like: `phpize && ./configure && make && make install`
+
+For detailed installation instructions for PHP PECL extensions, please see:
+http://www.php.net/manual/en/install.pecl.php
