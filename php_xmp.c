@@ -57,17 +57,17 @@ PHP_FUNCTION(xmp_get_format_list)
  * Returns a resource on success */
 PHP_FUNCTION(xmp_create_context)
 {
-	xmp_context *xmp_ptr = emalloc(sizeof(xmp_context));
-	xmp_context xmp;
+	xmp_context *xmp_ptr, xmp;
 
 	if (zend_parse_parameters_none() == FAILURE) {
 		return;
 	}
 
 	xmp = xmp_create_context();
-	memcpy(xmp_ptr, &xmp, sizeof(xmp_context));
 
 	if (xmp) {
+		xmp_ptr = emalloc(sizeof(xmp_context));
+		memcpy(xmp_ptr, &xmp, sizeof(xmp_context));
 		ZEND_REGISTER_RESOURCE(return_value, xmp_ptr, le_xmp);
 	} else {
 		RETURN_FALSE;
