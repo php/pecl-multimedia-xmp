@@ -31,6 +31,12 @@ static int le_xmp;
 ZEND_GET_MODULE(xmp)
 #endif
 
+#define FETCH_XMP \
+	do { \
+		ZEND_FETCH_RESOURCE(xmp, xmp_context, &ctx, -1, "xmp_context", le_xmp); \
+	} while(0);
+
+
 /* {{{ xmp_get_format_list()
  * Returns an array of supported formats */
 PHP_FUNCTION(xmp_get_format_list)
@@ -57,7 +63,7 @@ PHP_FUNCTION(xmp_get_format_list)
  * Returns a resource on success */
 PHP_FUNCTION(xmp_create_context)
 {
-	xmp_context *xmp_ptr, xmp;
+	xmp_context xmp;
 
 	if (zend_parse_parameters_none() == FAILURE) {
 		return;
@@ -66,9 +72,7 @@ PHP_FUNCTION(xmp_create_context)
 	xmp = xmp_create_context();
 
 	if (xmp) {
-		xmp_ptr = emalloc(sizeof(xmp_context));
-		memcpy(xmp_ptr, &xmp, sizeof(xmp_context));
-		ZEND_REGISTER_RESOURCE(return_value, xmp_ptr, le_xmp);
+		ZEND_REGISTER_RESOURCE(return_value, xmp, le_xmp);
 	} else {
 		RETURN_FALSE;
 	}
@@ -79,17 +83,17 @@ PHP_FUNCTION(xmp_create_context)
  * Frees the specified resource */
 PHP_FUNCTION(xmp_free_context)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &ctx) == FAILURE) {
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	if (*xmp_ptr) {
-		xmp_free_context(*xmp_ptr);
-		*xmp_ptr = NULL;
+	FETCH_XMP;
+	if (xmp) {
+		xmp_free_context(xmp);
+		zend_list_delete(Z_RESVAL_P(ctx));
 	}
 
 }
@@ -123,7 +127,7 @@ PHP_FUNCTION(xmp_test_module)
  * Load module for the specified resource */
 PHP_FUNCTION(xmp_load_module)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	int ret;
 	char *path;
@@ -133,8 +137,8 @@ PHP_FUNCTION(xmp_load_module)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_load_module(*xmp_ptr, path);
+	FETCH_XMP;
+	ret = xmp_load_module(xmp, path);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -143,7 +147,7 @@ PHP_FUNCTION(xmp_load_module)
  * Load module for the specified resource from string */
 PHP_FUNCTION(xmp_load_module_from_memory)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	char *data;
 	int ret, length;
@@ -152,8 +156,8 @@ PHP_FUNCTION(xmp_load_module_from_memory)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_load_module_from_memory(*xmp_ptr, data, length);
+	FETCH_XMP;
+	ret = xmp_load_module_from_memory(xmp, data, length);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -163,14 +167,14 @@ PHP_FUNCTION(xmp_load_module_from_memory)
 PHP_FUNCTION(xmp_release_module)
 {
 	zval *ctx;
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &ctx) == FAILURE) {
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	xmp_release_module(*xmp_ptr);
+	FETCH_XMP;
+	xmp_release_module(xmp);
 }
 /* }}} */
 
@@ -179,7 +183,7 @@ PHP_FUNCTION(xmp_release_module)
 PHP_FUNCTION(xmp_get_module_info)
 {
 	struct xmp_module_info mi;
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	struct xmp_channel *xc;
 	struct xmp_sample *xs;
 	struct xmp_pattern *xp;
@@ -192,8 +196,8 @@ PHP_FUNCTION(xmp_get_module_info)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	xmp_get_module_info(*xmp_ptr, &mi);
+	FETCH_XMP;
+	xmp_get_module_info(xmp, &mi);
 
 	array_init(return_value);
 	add_assoc_stringl_ex(return_value, "md5", sizeof("md5"), (char *)mi.md5, 16, 1);
@@ -400,7 +404,7 @@ PHP_FUNCTION(xmp_get_module_info)
  * Starts playing the currently loaded module */
 PHP_FUNCTION(xmp_start_player)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long rate, format, ret;
 
@@ -408,8 +412,8 @@ PHP_FUNCTION(xmp_start_player)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_start_player(*xmp_ptr, rate, format);
+	FETCH_XMP;
+	ret = xmp_start_player(xmp, rate, format);
 
 	RETVAL_LONG(ret);
 }
@@ -419,7 +423,7 @@ PHP_FUNCTION(xmp_start_player)
  * Plays one frame from the currently loaded module */
 PHP_FUNCTION(xmp_play_frame)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret;
 
@@ -427,8 +431,8 @@ PHP_FUNCTION(xmp_play_frame)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_play_frame(*xmp_ptr);
+	FETCH_XMP;
+	ret = xmp_play_frame(xmp);
 
 	RETVAL_LONG(ret);
 }
@@ -440,7 +444,7 @@ PHP_FUNCTION(xmp_get_frame_info)
 {
 	struct xmp_frame_info fi;
 	struct xmp_channel_info *ci;
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx, *cur = 0, *event = 0, *channel_info = 0;
 	int i;
 
@@ -448,8 +452,8 @@ PHP_FUNCTION(xmp_get_frame_info)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	xmp_get_frame_info(*xmp_ptr, &fi);
+	FETCH_XMP;
+	xmp_get_frame_info(xmp, &fi);
 
 	array_init(return_value);
 	add_assoc_long_ex(return_value, "pos", sizeof("pos"), fi.pos);
@@ -516,15 +520,15 @@ PHP_FUNCTION(xmp_get_frame_info)
  * Release player memory from resource */
 PHP_FUNCTION(xmp_end_player)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &ctx) == FAILURE) {
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	xmp_end_player(*xmp_ptr);
+	FETCH_XMP;
+	xmp_end_player(xmp);
 }
 /* }}} */
 
@@ -532,7 +536,7 @@ PHP_FUNCTION(xmp_end_player)
  * Skip replay to the start of the next position */
 PHP_FUNCTION(xmp_next_position)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret;
 
@@ -540,8 +544,8 @@ PHP_FUNCTION(xmp_next_position)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_next_position(*xmp_ptr);
+	FETCH_XMP;
+	ret = xmp_next_position(xmp);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -550,7 +554,7 @@ PHP_FUNCTION(xmp_next_position)
  * Skip replay to the start of the previous position */
 PHP_FUNCTION(xmp_prev_position)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret;
 
@@ -558,8 +562,8 @@ PHP_FUNCTION(xmp_prev_position)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_prev_position(*xmp_ptr);
+	FETCH_XMP;
+	ret = xmp_prev_position(xmp);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -568,7 +572,7 @@ PHP_FUNCTION(xmp_prev_position)
  * Skip replay to the start of the specified position */
 PHP_FUNCTION(xmp_set_position)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret, pos;
 
@@ -576,8 +580,8 @@ PHP_FUNCTION(xmp_set_position)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_set_position(*xmp_ptr, pos);
+	FETCH_XMP;
+	ret = xmp_set_position(xmp, pos);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -586,15 +590,15 @@ PHP_FUNCTION(xmp_set_position)
  * Stops the module */
 PHP_FUNCTION(xmp_stop_module)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &ctx) == FAILURE) {
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	xmp_stop_module(*xmp_ptr);
+	FETCH_XMP;
+	xmp_stop_module(xmp);
 }
 /* }}} */
 
@@ -602,15 +606,15 @@ PHP_FUNCTION(xmp_stop_module)
  * Restarts the module */
 PHP_FUNCTION(xmp_restart_module)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &ctx) == FAILURE) {
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	xmp_restart_module(*xmp_ptr);
+	FETCH_XMP;
+	xmp_restart_module(xmp);
 }
 /* }}} */
 
@@ -618,7 +622,7 @@ PHP_FUNCTION(xmp_restart_module)
  * Skip replay to the specified time */
 PHP_FUNCTION(xmp_seek_time)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret, time;
 
@@ -626,8 +630,8 @@ PHP_FUNCTION(xmp_seek_time)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_seek_time(*xmp_ptr, time);
+	FETCH_XMP;
+	ret = xmp_seek_time(xmp, time);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -636,7 +640,7 @@ PHP_FUNCTION(xmp_seek_time)
  * Mute or unmute the specified channel */
 PHP_FUNCTION(xmp_channel_mute)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret, channel, status;
 
@@ -644,8 +648,8 @@ PHP_FUNCTION(xmp_channel_mute)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_channel_mute(*xmp_ptr, channel, status);
+	FETCH_XMP;
+	ret = xmp_channel_mute(xmp, channel, status);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -654,7 +658,7 @@ PHP_FUNCTION(xmp_channel_mute)
  * Set or retrieve the volume of the specified channel. */
 PHP_FUNCTION(xmp_channel_vol)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret, channel, vol;
 
@@ -662,8 +666,8 @@ PHP_FUNCTION(xmp_channel_vol)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_channel_vol(*xmp_ptr, channel, vol);
+	FETCH_XMP;
+	ret = xmp_channel_vol(xmp, channel, vol);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -672,7 +676,7 @@ PHP_FUNCTION(xmp_channel_vol)
  * Dynamically insert a new event into a playing module. */
 PHP_FUNCTION(xmp_inject_event)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx, *array;
 	long channel;
 	struct xmp_event event;
@@ -681,8 +685,7 @@ PHP_FUNCTION(xmp_inject_event)
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rla", &ctx, &channel, &array) == FAILURE) {
 		return;
 	}
-
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
+	FETCH_XMP;
 
 #define SET_EVENT_VALUE(x, x_str) \
 	do { \
@@ -705,7 +708,7 @@ PHP_FUNCTION(xmp_inject_event)
 	SET_EVENT_VALUE(event.f2p, "f2p");
 	SET_EVENT_VALUE(event._flag, "_flag");
 
-	xmp_inject_event(*xmp_ptr, channel, &event);
+	xmp_inject_event(xmp, channel, &event);
 }
 /* }}} */
 
@@ -713,7 +716,7 @@ PHP_FUNCTION(xmp_inject_event)
  * Set the path to retrieve external instruments or samples */
 PHP_FUNCTION(xmp_set_instrument_path)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	char *path;
 	long ret, path_len;
@@ -722,8 +725,8 @@ PHP_FUNCTION(xmp_set_instrument_path)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_set_instrument_path(*xmp_ptr, path);
+	FETCH_XMP;
+	ret = xmp_set_instrument_path(xmp, path);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -732,7 +735,7 @@ PHP_FUNCTION(xmp_set_instrument_path)
  * Retrieve current value of the specified player parameter. */
 PHP_FUNCTION(xmp_get_player)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret, param;
 
@@ -740,8 +743,8 @@ PHP_FUNCTION(xmp_get_player)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_get_player(*xmp_ptr, param);
+	FETCH_XMP;
+	ret = xmp_get_player(xmp, param);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -750,7 +753,7 @@ PHP_FUNCTION(xmp_get_player)
  * Set player parameter with the specified value. */
 PHP_FUNCTION(xmp_set_player)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret, param, val;
 
@@ -758,8 +761,8 @@ PHP_FUNCTION(xmp_set_player)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_set_player(*xmp_ptr, param, val);
+	FETCH_XMP;
+	ret = xmp_set_player(xmp, param, val);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -768,7 +771,7 @@ PHP_FUNCTION(xmp_set_player)
 * Initialize the mix subsystem with the given number of reserved channels and samples. */
 PHP_FUNCTION(xmp_start_smix)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret, nch, nsmp;
 
@@ -776,8 +779,8 @@ PHP_FUNCTION(xmp_start_smix)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_start_smix(*xmp_ptr, nch, nsmp);
+	FETCH_XMP;
+	ret = xmp_start_smix(xmp, nch, nsmp);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -786,7 +789,7 @@ PHP_FUNCTION(xmp_start_smix)
 * Play a note using an instrument from the currently loaded module in one of the reserved sound mix channels. */
 PHP_FUNCTION(xmp_smix_play_instrument)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret, ins, note, vol, chn;
 
@@ -794,8 +797,8 @@ PHP_FUNCTION(xmp_smix_play_instrument)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_smix_play_instrument(*xmp_ptr, ins, note, vol, chn);
+	FETCH_XMP;
+	ret = xmp_smix_play_instrument(xmp, ins, note, vol, chn);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -804,7 +807,7 @@ PHP_FUNCTION(xmp_smix_play_instrument)
 * Play an external sample file in one of the reserved sound channels */
 PHP_FUNCTION(xmp_smix_play_sample)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret, ins, note, vol, chn;
 
@@ -812,8 +815,8 @@ PHP_FUNCTION(xmp_smix_play_sample)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_smix_play_sample(*xmp_ptr, ins, note, vol, chn);
+	FETCH_XMP;
+	ret = xmp_smix_play_sample(xmp, ins, note, vol, chn);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -822,7 +825,7 @@ PHP_FUNCTION(xmp_smix_play_sample)
 * Set the channel pan value. */
 PHP_FUNCTION(xmp_smix_channel_pan)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret, chn, pan;
 
@@ -830,8 +833,8 @@ PHP_FUNCTION(xmp_smix_channel_pan)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_smix_channel_pan(*xmp_ptr, chn, pan);
+	FETCH_XMP;
+	ret = xmp_smix_channel_pan(xmp, chn, pan);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -840,7 +843,7 @@ PHP_FUNCTION(xmp_smix_channel_pan)
 * Load a sound sample from a file. Samples should be in mono WAV (RIFF) format. */
 PHP_FUNCTION(xmp_smix_load_sample)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	char *path;
 	long ret, num, path_len;
@@ -849,8 +852,8 @@ PHP_FUNCTION(xmp_smix_load_sample)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_smix_load_sample(*xmp_ptr, num, path);
+	FETCH_XMP;
+	ret = xmp_smix_load_sample(xmp, num, path);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -859,7 +862,7 @@ PHP_FUNCTION(xmp_smix_load_sample)
 * Release a sound sample */
 PHP_FUNCTION(xmp_smix_release_sample)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 	long ret, num;
 
@@ -867,8 +870,8 @@ PHP_FUNCTION(xmp_smix_release_sample)
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	ret = xmp_smix_release_sample(*xmp_ptr, num);
+	FETCH_XMP;
+	ret = xmp_smix_release_sample(xmp, num);
 	RETVAL_LONG(ret);
 }
 /* }}} */
@@ -877,31 +880,15 @@ PHP_FUNCTION(xmp_smix_release_sample)
 * Release the mix subsystem */
 PHP_FUNCTION(xmp_end_smix)
 {
-	xmp_context *xmp_ptr;
+	xmp_context xmp;
 	zval *ctx;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &ctx) == FAILURE) {
 		return;
 	}
 
-	ZEND_FETCH_RESOURCE(xmp_ptr, xmp_context *, &ctx, -1, "xmp_context", le_xmp);
-	xmp_end_smix(*xmp_ptr);
-}
-/* }}} */
-
-
-
-/* {{{ _free_xmp_context
- */
-static void _free_xmp_context(zend_rsrc_list_entry *rsrc TSRMLS_DC)
-{
-	xmp_context *xmp_ptr = (xmp_context *)rsrc->ptr;
-
-	if (*xmp_ptr) {
-		xmp_free_context(*xmp_ptr);
-		efree(xmp_ptr);
-	}
-
+	FETCH_XMP;
+	xmp_end_smix(xmp);
 }
 /* }}} */
 
@@ -910,7 +897,7 @@ static void _free_xmp_context(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 
 PHP_MINIT_FUNCTION(xmp)
 {
-	le_xmp = zend_register_list_destructors_ex(_free_xmp_context, NULL, "xmp context", module_number);
+	le_xmp = zend_register_list_destructors_ex(NULL, NULL, "xmp context", module_number);
 	return SUCCESS;
 }
 /* }}} */

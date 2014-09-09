@@ -1,5 +1,5 @@
 --TEST--
-Test context creation
+Test context creation and deletion
 --CREDITS--
 Boro Sitnikovski <buritomath@yahoo.com>
 --SKIPIF--
@@ -8,6 +8,7 @@ Boro Sitnikovski <buritomath@yahoo.com>
 <?php 
 $ctx = xmp_create_context();
 var_dump($ctx);
+xmp_free_context($ctx);
 ?>
 --EXPECTF--
 resource(%d) of type (xmp context)
