@@ -83,7 +83,7 @@ PHP_FUNCTION(xmp_create_context)
  * Frees the specified resource */
 PHP_FUNCTION(xmp_free_context)
 {
-	xmp_context xmp;
+	xmp_context xmp = NULL;
 	zval *ctx;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &ctx) == FAILURE) {
