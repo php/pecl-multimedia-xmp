@@ -87,7 +87,7 @@ PHP_FUNCTION(xmp_create_context)
 }
 /* }}} */
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_free_context, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_resource, 0, 0, 1)
         ZEND_ARG_INFO(0, resource)
 ZEND_END_ARG_INFO()
 
@@ -426,6 +426,12 @@ PHP_FUNCTION(xmp_get_module_info)
 }
 /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_start_player, 0, 0, 3)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, rate)
+        ZEND_ARG_INFO(0, format)
+ZEND_END_ARG_INFO()
+
 /* {{{ xmp_start_player(resource, rate, format)
  * Starts playing the currently loaded module */
 PHP_FUNCTION(xmp_start_player)
@@ -594,6 +600,11 @@ PHP_FUNCTION(xmp_prev_position)
 }
 /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_set_position, 0, 0, 2)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, pos)
+ZEND_END_ARG_INFO()
+
 /* {{{ xmp_set_position(resource, pos)
  * Skip replay to the start of the specified position */
 PHP_FUNCTION(xmp_set_position)
@@ -644,6 +655,11 @@ PHP_FUNCTION(xmp_restart_module)
 }
 /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_seek_time, 0, 0, 2)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, time)
+ZEND_END_ARG_INFO()
+
 /* {{{ xmp_seek_time(resource, time)
  * Skip replay to the specified time */
 PHP_FUNCTION(xmp_seek_time)
@@ -661,6 +677,12 @@ PHP_FUNCTION(xmp_seek_time)
 	RETVAL_LONG(ret);
 }
 /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_channel_mute, 0, 0, 3)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, channel)
+        ZEND_ARG_INFO(0, status)
+ZEND_END_ARG_INFO()
 
 /* {{{ xmp_channel_mute(resource, channel, status)
  * Mute or unmute the specified channel */
@@ -680,6 +702,12 @@ PHP_FUNCTION(xmp_channel_mute)
 }
 /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_channel_vol, 0, 0, 3)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, channel)
+        ZEND_ARG_INFO(0, vol)
+ZEND_END_ARG_INFO()
+
 /* {{{ xmp_channel_vol(resource, channel, vol)
  * Set or retrieve the volume of the specified channel. */
 PHP_FUNCTION(xmp_channel_vol)
@@ -697,6 +725,12 @@ PHP_FUNCTION(xmp_channel_vol)
 	RETVAL_LONG(ret);
 }
 /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_inject_event, 0, 0, 3)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, channel)
+        ZEND_ARG_ARRAY_INFO(0, event, 0)
+ZEND_END_ARG_INFO()
 
 /* {{{ xmp_inject_event(resource, channel, event)
  * Dynamically insert a new event into a playing module. */
@@ -738,6 +772,11 @@ PHP_FUNCTION(xmp_inject_event)
 }
 /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_set_instrument_path, 0, 0, 2)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, path)
+ZEND_END_ARG_INFO()
+
 /* {{{ xmp_set_instrument_path(resource, path)
  * Set the path to retrieve external instruments or samples */
 PHP_FUNCTION(xmp_set_instrument_path)
@@ -747,7 +786,7 @@ PHP_FUNCTION(xmp_set_instrument_path)
 	char *path;
 	long ret, path_len;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &ctx, &path, &path_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r" ARG_PATH, &ctx, &path, &path_len) == FAILURE) {
 		return;
 	}
 
@@ -756,6 +795,11 @@ PHP_FUNCTION(xmp_set_instrument_path)
 	RETVAL_LONG(ret);
 }
 /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_get_player, 0, 0, 2)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, param)
+ZEND_END_ARG_INFO()
 
 /* {{{ xmp_get_player(resource, param)
  * Retrieve current value of the specified player parameter. */
@@ -775,6 +819,12 @@ PHP_FUNCTION(xmp_get_player)
 }
 /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_set_player, 0, 0, 3)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, param)
+        ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
 /* {{{ xmp_set_player(resource, param, val)
  * Set player parameter with the specified value. */
 PHP_FUNCTION(xmp_set_player)
@@ -792,6 +842,12 @@ PHP_FUNCTION(xmp_set_player)
 	RETVAL_LONG(ret);
 }
 /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_start_smix, 0, 0, 3)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, nchannels)
+        ZEND_ARG_INFO(0, nsamples)
+ZEND_END_ARG_INFO()
 
 /* {{{ xmp_start_smix(resource, nch, nsmp)
 * Initialize the mix subsystem with the given number of reserved channels and samples. */
@@ -811,6 +867,14 @@ PHP_FUNCTION(xmp_start_smix)
 }
 /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_smix_play_instrument, 0, 0, 5)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, instrument)
+        ZEND_ARG_INFO(0, note)
+        ZEND_ARG_INFO(0, vol)
+        ZEND_ARG_INFO(0, channel)
+ZEND_END_ARG_INFO()
+
 /* {{{ xmp_smix_play_instrument(resource, ins, note, vol, chn)
 * Play a note using an instrument from the currently loaded module in one of the reserved sound mix channels. */
 PHP_FUNCTION(xmp_smix_play_instrument)
@@ -829,7 +893,15 @@ PHP_FUNCTION(xmp_smix_play_instrument)
 }
 /* }}} */
 
-/* {{{ xmp_smix_play_sample(resource, ins, vol, chn)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_smix_play_sample, 0, 0, 5)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, instrument)
+        ZEND_ARG_INFO(0, note)
+        ZEND_ARG_INFO(0, vol)
+        ZEND_ARG_INFO(0, channel)
+ZEND_END_ARG_INFO()
+
+/* {{{ xmp_smix_play_sample(resource, ins, note, vol, chn)
 * Play an external sample file in one of the reserved sound channels */
 PHP_FUNCTION(xmp_smix_play_sample)
 {
@@ -846,6 +918,12 @@ PHP_FUNCTION(xmp_smix_play_sample)
 	RETVAL_LONG(ret);
 }
 /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_smix_channel_pan, 0, 0, 3)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, channel)
+        ZEND_ARG_INFO(0, pan)
+ZEND_END_ARG_INFO()
 
 /* {{{ xmp_smix_channel_pan(resource, chn, pan)
 * Set the channel pan value. */
@@ -865,6 +943,12 @@ PHP_FUNCTION(xmp_smix_channel_pan)
 }
 /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_smix_load_sample, 0, 0, 3)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, num)
+        ZEND_ARG_INFO(0, path)
+ZEND_END_ARG_INFO()
+
 /* {{{ xmp_smix_load_sample(resource, num, path)
 * Load a sound sample from a file. Samples should be in mono WAV (RIFF) format. */
 PHP_FUNCTION(xmp_smix_load_sample)
@@ -874,7 +958,7 @@ PHP_FUNCTION(xmp_smix_load_sample)
 	char *path;
 	long ret, num, path_len;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rls", &ctx, &num, &path, &path_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl" ARG_PATH, &ctx, &num, &path, &path_len) == FAILURE) {
 		return;
 	}
 
@@ -883,6 +967,11 @@ PHP_FUNCTION(xmp_smix_load_sample)
 	RETVAL_LONG(ret);
 }
 /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_smix_release_sample, 0, 0, 2)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, num)
+ZEND_END_ARG_INFO()
 
 /* {{{ xmp_smix_release_sample(resource, num)
 * Release a sound sample */
@@ -953,35 +1042,35 @@ PHP_MINFO_FUNCTION(xmp)
 const zend_function_entry xmp_functions[] = {
 	PHP_FE(xmp_get_format_list,         arginfo_xmp_none)
 	PHP_FE(xmp_create_context,          arginfo_xmp_none)
-	PHP_FE(xmp_free_context,            arginfo_xmp_free_context)
+	PHP_FE(xmp_free_context,            arginfo_xmp_resource)
 	PHP_FE(xmp_test_module,             arginfo_xmp_test_module)
 	PHP_FE(xmp_load_module,             arginfo_xmp_load_module)
 	PHP_FE(xmp_load_module_from_memory, arginfo_xmp_load_module_from_memory)
-	PHP_FE(xmp_release_module, NULL)
-	PHP_FE(xmp_get_module_info, NULL)
-	PHP_FE(xmp_start_player, NULL)
-	PHP_FE(xmp_play_frame, NULL)
-	PHP_FE(xmp_get_frame_info, NULL)
-	PHP_FE(xmp_end_player, NULL)
-	PHP_FE(xmp_next_position, NULL)
-	PHP_FE(xmp_prev_position, NULL)
-	PHP_FE(xmp_set_position, NULL)
-	PHP_FE(xmp_stop_module, NULL)
-	PHP_FE(xmp_restart_module, NULL)
-	PHP_FE(xmp_seek_time, NULL)
-	PHP_FE(xmp_channel_mute, NULL)
-	PHP_FE(xmp_channel_vol, NULL)
-	PHP_FE(xmp_inject_event, NULL)
-	PHP_FE(xmp_set_instrument_path, NULL)
-	PHP_FE(xmp_get_player, NULL)
-	PHP_FE(xmp_set_player, NULL)
-	PHP_FE(xmp_start_smix, NULL)
-	PHP_FE(xmp_smix_play_instrument, NULL)
-	PHP_FE(xmp_smix_play_sample, NULL)
-	PHP_FE(xmp_smix_channel_pan, NULL)
-	PHP_FE(xmp_smix_load_sample, NULL)
-	PHP_FE(xmp_smix_release_sample, NULL)
-	PHP_FE(xmp_end_smix, NULL)
+	PHP_FE(xmp_release_module,          arginfo_xmp_resource)
+	PHP_FE(xmp_get_module_info,         arginfo_xmp_resource)
+	PHP_FE(xmp_start_player,            arginfo_xmp_start_player)
+	PHP_FE(xmp_play_frame,              arginfo_xmp_resource)
+	PHP_FE(xmp_get_frame_info,          arginfo_xmp_resource)
+	PHP_FE(xmp_end_player,              arginfo_xmp_resource)
+	PHP_FE(xmp_next_position,           arginfo_xmp_resource)
+	PHP_FE(xmp_prev_position,           arginfo_xmp_resource)
+	PHP_FE(xmp_set_position,            arginfo_xmp_set_position)
+	PHP_FE(xmp_stop_module,             arginfo_xmp_resource)
+	PHP_FE(xmp_restart_module,          arginfo_xmp_resource)
+	PHP_FE(xmp_seek_time,               arginfo_xmp_seek_time)
+	PHP_FE(xmp_channel_mute,            arginfo_xmp_channel_mute)
+	PHP_FE(xmp_channel_vol,             arginfo_xmp_channel_vol)
+	PHP_FE(xmp_inject_event,            arginfo_xmp_inject_event)
+	PHP_FE(xmp_set_instrument_path,     arginfo_xmp_set_instrument_path)
+	PHP_FE(xmp_get_player,              arginfo_xmp_get_player)
+	PHP_FE(xmp_set_player,              arginfo_xmp_set_player)
+	PHP_FE(xmp_start_smix,              arginfo_xmp_start_smix)
+	PHP_FE(xmp_smix_play_instrument,    arginfo_xmp_smix_play_instrument)
+	PHP_FE(xmp_smix_play_sample,        arginfo_xmp_smix_play_sample)
+	PHP_FE(xmp_smix_channel_pan,        arginfo_xmp_smix_channel_pan)
+	PHP_FE(xmp_smix_load_sample,        arginfo_xmp_smix_load_sample)
+	PHP_FE(xmp_smix_release_sample,     arginfo_xmp_smix_release_sample)
+	PHP_FE(xmp_end_smix,                arginfo_xmp_resource)
 #ifdef  PHP_FE_END
 	PHP_FE_END	/* Must be the last line in xmp_functions[] */
 #else
