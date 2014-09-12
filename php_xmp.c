@@ -976,7 +976,11 @@ const zend_function_entry xmp_functions[] = {
 	PHP_FE(xmp_smix_load_sample, NULL)
 	PHP_FE(xmp_smix_release_sample, NULL)
 	PHP_FE(xmp_end_smix, NULL)
+#ifdef  PHP_FE_END
 	PHP_FE_END	/* Must be the last line in xmp_functions[] */
+#else
+	{NULL, NULL, NULL}
+#endif
 };
 /* }}} */
 
