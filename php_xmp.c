@@ -36,6 +36,8 @@ ZEND_GET_MODULE(xmp)
 		ZEND_FETCH_RESOURCE(xmp, xmp_context, &ctx, -1, "xmp_context", le_xmp); \
 	} while(0);
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_none, 0, 0, 0)
+ZEND_END_ARG_INFO()
 
 /* {{{ xmp_get_format_list()
  * Returns an array of supported formats */
@@ -79,6 +81,10 @@ PHP_FUNCTION(xmp_create_context)
 }
 /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_free_context, 0, 0, 1)
+        ZEND_ARG_INFO(0, resource)
+ZEND_END_ARG_INFO()
+
 /* {{{ xmp_free_context(resource)
  * Frees the specified resource */
 PHP_FUNCTION(xmp_free_context)
@@ -98,6 +104,10 @@ PHP_FUNCTION(xmp_free_context)
 
 }
 /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_test_module, 0, 0, 1)
+        ZEND_ARG_INFO(0, path)
+ZEND_END_ARG_INFO()
 
 /* {{{ xmp_test_module(path)
  * Retrieve name and module type */
@@ -123,6 +133,11 @@ PHP_FUNCTION(xmp_test_module)
 }
 /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_load_module, 0, 0, 2)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, path)
+ZEND_END_ARG_INFO()
+
 /* {{{ xmp_load_module(resource, path)
  * Load module for the specified resource */
 PHP_FUNCTION(xmp_load_module)
@@ -142,6 +157,11 @@ PHP_FUNCTION(xmp_load_module)
 	RETVAL_LONG(ret);
 }
 /* }}} */
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_xmp_load_module_from_memory, 0, 0, 2)
+        ZEND_ARG_INFO(0, resource)
+        ZEND_ARG_INFO(0, string)
+ZEND_END_ARG_INFO()
 
 /* {{{ xmp_load_module_from_memory(resource, string)
  * Load module for the specified resource from string */
@@ -925,12 +945,12 @@ PHP_MINFO_FUNCTION(xmp)
  * Every user visible function must have an entry in xmp_functions[].
  */
 const zend_function_entry xmp_functions[] = {
-	PHP_FE(xmp_get_format_list, NULL)
-	PHP_FE(xmp_create_context, NULL)
-	PHP_FE(xmp_free_context, NULL)
-	PHP_FE(xmp_test_module, NULL)
-	PHP_FE(xmp_load_module, NULL)
-	PHP_FE(xmp_load_module_from_memory, NULL)
+	PHP_FE(xmp_get_format_list,         arginfo_xmp_none)
+	PHP_FE(xmp_create_context,          arginfo_xmp_none)
+	PHP_FE(xmp_free_context,            arginfo_xmp_free_context)
+	PHP_FE(xmp_test_module,             arginfo_xmp_test_module)
+	PHP_FE(xmp_load_module,             arginfo_xmp_load_module)
+	PHP_FE(xmp_load_module_from_memory, arginfo_xmp_load_module_from_memory)
 	PHP_FE(xmp_release_module, NULL)
 	PHP_FE(xmp_get_module_info, NULL)
 	PHP_FE(xmp_start_player, NULL)
