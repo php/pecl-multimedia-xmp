@@ -42,7 +42,7 @@ if test "$PHP_XMP" != "no"; then
  ],[
    AC_MSG_ERROR([wrong xmp lib version or lib not found])
  ],[
-   -L$XMP_DIR/lib -lm
+   -L$XMP_DIR/$PHP_LIBDIR -lm
  ])
 
  PHP_SUBST(XMP_SHARED_LIBADD)
