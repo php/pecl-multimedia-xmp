@@ -27,6 +27,12 @@
 /* True global resources - no need for thread safety here */
 static int le_xmp;
 
+#if PHP_VERSION_ID < 50400
+#define ARG_PATH "s"
+#else
+#define ARG_PATH "p"
+#endif
+
 #ifdef COMPILE_DL_XMP
 ZEND_GET_MODULE(xmp)
 #endif
@@ -118,7 +124,7 @@ PHP_FUNCTION(xmp_test_module)
 	int path_len;
 	struct xmp_test_info ti;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, ARG_PATH, &path, &path_len) == FAILURE) {
 		return;
 	}
 
