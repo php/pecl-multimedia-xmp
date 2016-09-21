@@ -1,13 +1,14 @@
 // $Id$
 // vim:ft=javascript
 
-// If your extension references something external, use ARG_WITH
-// ARG_WITH("xmp", "for xmp support", "no");
-
-// Otherwise, use ARG_ENABLE
-ARG_ENABLE("xmp", "enable xmp support", "no");
+ ARG_WITH("xmp", "for xmp support", "no");
 
 if (PHP_XMP != "no") {
-	EXTENSION("xmp", "php_xmp.c");
+	if (CHECK_LIB("libxmp_a.lib;libxmp.lib", "xmp", PHP_XMP) &&
+	CHECK_HEADER_ADD_INCLUDE("xmp.h", "CFLAGS_XMP")) {
+		EXTENSION("xmp", "php_xmp.c");
+	} else {
+		WARNING("xmp not enabled; libraries and headers not found");
+	}
 }
 
